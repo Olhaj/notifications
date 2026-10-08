@@ -37,3 +37,95 @@
 //   static renderNotifications(list) {}
 //   static deleteNotifications(id) {}
 // }
+
+// ---------- 1. Переменные ----------
+const form = document.querySelector("form");
+const orderButtons = document.querySelector(".orderButtons");
+const container = document.querySelector(".notificationContainer");
+
+// ---------- 2. Конструктор уведомления ----------
+class Notifications {
+  static notoficationsList = [];
+
+  constructor(title, type, info) {
+    this.id = Date.now() + Math.random();
+    this.title = title;
+    this.type = type; // "success" | "warning" | "error" | "info"
+    this.info = info;
+  }
+
+  static renderNotifications(list) {
+    container.innerHTML = "";
+
+    list.forEach((item) => {
+      const el = document.createElement("div");
+      el.className = `notification ${item.type}`;
+
+      el.innerHTML = `
+                <div class="notificationIcon">✓</div>
+                <div class="notificationContent">
+                    <h3>${item.title}</h3>
+                    <p>${item.info}</p>
+                </div>
+                <button class="closeBtn" data-id="${item.id}">×</button>
+            `;
+
+      el.querySelector(".closeBtn").addEventListener("click", () => {
+        Notifications.deleteNotifications(item.id);
+      });
+
+      container.appendChild(el);
+    });
+  }
+
+  static deleteNotifications(id) {
+    Notifications.notoficationsList = Notifications.notoficationsList.filter(
+      (item) => item.id !== id,
+    );
+    Notifications.renderNotifications(Notifications.notoficationsList);
+  }
+
+  static show(title, type, info) {
+    const notification = new Notifications(title, type, info);
+    Notifications.notoficationsList.push(notification);
+    Notifications.renderNotifications(Notifications.notoficationsList);
+
+    setTimeout(() => {
+      Notifications.deleteNotifications(notification.id);
+    }, 4000);
+  }
+}
+
+// ---------- 3. Обработчики событий ----------
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  Notifications.show(
+    "Order created",
+    "success",
+    "Wait for further information",
+  );
+  orderButtons.classList.add("show");
+  form.reset();
+});
+
+orderButtons.addEventListener("click", (e) => {
+  const target = e.target;
+
+  if (target.classList.contains("paidBtb")) {
+    Notifications.show("Order paid", "success", "Wait for shipment");
+  } else if (target.classList.contains("sentBtn")) {
+    Notifications.show("Order sent", "warning", "Wait for the courier");
+  } else if (target.classList.contains("recievedBtn")) {
+    Notifications.show(
+      "Order received",
+      "success",
+      "We are waiting for you again!",
+    );
+  } else {
+    Notifications.show(
+      "Unknown order status",
+      "error",
+      "Please contact support",
+    );
+  }
+});
